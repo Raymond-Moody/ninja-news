@@ -56,6 +56,8 @@ services:
     stop_grace_period: "3s"
     volumes:
       - "postgres:/var/lib/postgresql/data"
+    ports:
+      - 5432:5432
 
   redis:
     deploy:
