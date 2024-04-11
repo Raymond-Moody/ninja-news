@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package news;
+
+message Video {
+    message Channel{
+        string id = 1;
+        string title = 2;
+    }
+
+    string url = 1;
+    string title = 2;
+    string transcript = 3;
+    Channel channel = 4;
+    google.protobuf.Timestamp publication_date = 5;
+    string category = 6;
+}
