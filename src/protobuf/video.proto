@@ -10,7 +10,7 @@ message Video {
         string title = 2;
     }
 
-    string url = 1;
+    string id = 1;
     string title = 2;
     string transcript = 3;
     Channel channel = 4;

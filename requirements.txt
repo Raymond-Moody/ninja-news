@@ -16,3 +16,6 @@ black==24.2.0
 python-dotenv
 google-api-python-client
 protobuf
+nats-py
+pytube
+youtube-transcript-api
