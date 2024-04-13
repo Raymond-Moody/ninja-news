@@ -1,9 +1,8 @@
 import os
-import datetime
 import nats
 import asyncio
 from protobuf import video_pb2
-from google.protobuf.timestamp_pb2 import Timestamp
+#from google.protobuf.timestamp_pb2 import Timestamp
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -23,12 +22,11 @@ categories = {}
 # Turn categories into a dictionary
 for item in response["items"]:
     categories[item["id"]] = item["snippet"]["title"]
-    #print(item["id"], ":", item["snippet"]["title"])
 
-def main():
-    #nc = await nats.connect("nats:4222")
-    #js = nc.jetstream()
-    #await js.add_stream(name="youtube-news", subjects=["news"])
+async def main():
+    nc = await nats.connect("nats:4222")
+    js = nc.jetstream()
+    await js.add_stream(name="youtube-news", subjects=["news"])
 
     # Store videos from links in text file
     with open("yt-links", "r") as videos:
@@ -50,9 +48,6 @@ def main():
                 video_proto.title = yt.title
                 video_proto.channel.id = yt.channel_id
 
-                #seconds = int(pub_date)
-                #nanos = int((pub_date - seconds) * 10**9)
-                #timestamp = Timestamp(seconds=seconds, nanos=nanos)
                 video_proto.publication_date.FromDatetime(yt.publish_date)
 
                 # Use YouTube API to get channel title and video category
@@ -69,20 +64,12 @@ def main():
                     transcript_text += " "
                 if transcript_text.strip() == "":
                     print(f"Failed to get transcript for {v_id}")
-                    return
+                    continue
                 video_proto.transcript = transcript_text
 
-                print(f"Video ID: {video_proto.id}")
-                print(f"Title: {video_proto.title}")
-                #print(f"Transcript: {video_proto.transcript}")
-                print(f"Channel ID: {video_proto.channel.id}")
-                print(f"Channel Name: {video_proto.channel.title}")
-                #pub_date = datetime.datetime.fromtimestamp(video_proto.publication_date)
-                print(f"Publication Date: {video_proto.publication_date.ToDatetime()}")
-                print(f"Category: {video_proto.category}")
-                return
-
                 # Send message over nats
+                payload = video_proto.SerializeToString()
+                await js.publish("news", payload)
 
                 # Download video
                 stream = yt.streams.first()
@@ -90,8 +77,11 @@ def main():
                     print(f"Failed to get stream for {v_id}")
                     continue
                 else:
+                    print("Would have downloaded video here")
                     pass
                     #stream.download(output_path="video_files/", filename=v_id)
 
+        await nc.close()
+
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
