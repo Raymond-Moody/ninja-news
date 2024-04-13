@@ -15,3 +15,13 @@
 # Accessing the admin view
 1. With the docker container running, use `./run manage createsuperuser` to create an admin account
 2. Visit `localhost:8000/admin/` to see the admin view
+
+
+* Milestone 3
+* Submitted 4/14/2024
+
+# Running the Producer / Consumer Manually
+* The producer and consumer for videos are scheduled to run once an hour each. To run manually use:
+1. From the root directory, run `./run manage shell`
+2. Run `from news.tasks import producer` or `from news.tasks import consumer`
+3. Run `producer.run()` or `consumer.run()`
