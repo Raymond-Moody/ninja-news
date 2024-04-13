@@ -60,7 +60,7 @@ async def main():
                 transcript = YouTubeTranscriptApi.get_transcript(v_id)
                 transcript_text = ""
                 for line in transcript:
-                    transcript_text += line["text"]
+                    transcript_text += line["text"].strip()
                     transcript_text += " "
                 if transcript_text.strip() == "":
                     print(f"Failed to get transcript for {v_id}")
@@ -72,7 +72,12 @@ async def main():
                 await js.publish("news", payload)
 
                 # Download video
-                stream = yt.streams.first()
+                try:
+                    stream = yt.streams.first()
+                except pytube.exceptions.AgeRestrictedError:
+                    print(f"{video_proto.id} was age restricted")
+                    continue
+
                 if stream is None:
                     print(f"Failed to get stream for {v_id}")
                     continue

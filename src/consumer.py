@@ -2,10 +2,16 @@ import os
 import nats
 import asyncio
 from protobuf import video_pb2
+from datetime import timezone
+
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+django.setup()
 from django.conf import settings
+
 from news.models import Channel, Category, Video
 
-def pull_messages():
+async def pull_messages():
     nc = await nats.connect("nats:4222")
     js = nc.jetstream()
     try:
@@ -15,7 +21,7 @@ def pull_messages():
         return -1
 
     try:
-        msgs = await sub.fetch(1)
+        msgs = await sub.fetch(50)
     except TimeoutError:
         print("Jetstream fetch timed out")
         return -1
@@ -25,17 +31,18 @@ def pull_messages():
         video_proto.ParseFromString(msg.data)
 
         # Skip if video already exists in the database
-        if Video.objects.filter(id=video_proto.id).exists():
+        if await Video.objects.filter(id=video_proto.id).aexists():
+            print(f"Skipping video {video_proto.id} as it already exists")
             await msg.ack()
             continue
 
         # Create channel and category objects if they do not exist
         # Otherwise, get the existing object
-        ch, created = Channel.objects.get_or_create(
+        ch, created = await Channel.objects.aget_or_create(
             id=video_proto.channel.id,
             name=video_proto.channel.title
         )
-        cat, created = Category.objects.get_or_create(name=video_proto.category)
+        cat, created = await Category.objects.aget_or_create(name=video_proto.category)
 
         # Write transcript to file
         transcript_file_path = os.path.join(settings.BASE_DIR, f"transcripts/{video_proto.id}")
@@ -43,13 +50,13 @@ def pull_messages():
             f.write(video_proto.transcript)
 
         # Create object in database
-        video_db = Video.objects.create(
+        video_db = await Video.objects.acreate(
             id=video_proto.id,
             url=f"https://www.youtube.com/watch?v={video_proto.id}",
             title=video_proto.title,
             transcript=transcript_file_path,
             channel=ch,
-            publication_date=video_proto.publication_date.ToDatetime(),
+            publication_date=video_proto.publication_date.ToDatetime(tzinfo=timezone.utc),
             category=cat
         )
 
