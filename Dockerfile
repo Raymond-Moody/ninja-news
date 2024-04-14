@@ -43,7 +43,6 @@ ARG GID=1000
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends build-essential curl libpq-dev \
-  && apt-get install -y --no-install-recommends git nodejs npm ruby-full\
   && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
   && apt-get clean \
   && groupadd -g "${GID}" python \
@@ -52,8 +51,6 @@ RUN apt-get update \
   && chown python:python -R /public_collected /app
 
 USER python
-
-RUN npm install --save @tabler/core
 
 COPY --chown=python:python requirements*.txt ./
 COPY --chown=python:python bin/ ./bin
