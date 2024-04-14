@@ -1,26 +1,51 @@
 {% extends "./base.html" %}
 
+{% load ninja_news %}
+
 {% block content %}
 {% if video_list %}
-    <table>
-        <tr>
-            <th>Title</th>
-            <th>Channel</th>
-            <th>Category</th>
-            <th>Publication Date</th>
-            <th>URL</th>
-        </tr>
+<div id="table-default" class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th><button class="table-sort" data-sort="sort-title">Title</button></th>
+                <th><button class="table-sort" data-sort="sort-channel">Channel</button></th>
+                <th><button class="table-sort" data-sort="sort-category">Category</button></th>
+                <th><button class="table-sort" data-sort="sort-date">Publication Date</button></th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody class="table-tbody">
         {% for video in video_list %}
             <tr>
-                <td>{{video.title}}</td>
-                <td>{{video.channel.name}}</td>
-                <td>{{video.category.name}}</td>
-                <td>{{video.publication_date}}</td>
-                <td>{{video.url}}</td>
+                <td class="sort-title">{{video.title}}</td>
+                <td class="sort-channel">{{video.channel.name}}</td>
+                <td class="sort-category">{{video.category.name}}</td>
+                <td class="sort-date">{{video.publication_date|date_filter}}</td>
+                <td><a href={{video.url}}>{{video.url}}</a></td>
             </tr>
         {% endfor %}
+        </tbody>
     </table>
+</div>
+
+
+<!-- 
+Get the table columns to sort when you click the title
+Adapted from https://github.com/tabler/tabler/blob/dev/demo/datatables.html
+-->
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/libs/list.js/dist/list.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/demo.min.js" defer></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+    const list = new List('table-default', {
+    sortClass: 'table-sort',
+    listClass: 'table-tbody',
+    valueNames: [ 'sort-title', 'sort-channel', 'sort-category', 'sort-date' ]
+    });
+    })
+</script>
 {% else %}
-    <p>Failed to load latest videos</p>
+<p>Failed to load latest videos</p>
 {% endif %}
 {% endblock %}
