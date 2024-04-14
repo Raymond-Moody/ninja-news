@@ -25,3 +25,5 @@
 1. From the root directory, run `./run manage shell`
 2. Run `from news.tasks import producer` or `from news.tasks import consumer`
 3. Run `producer.run()` or `consumer.run()`
+
+![Image of the /latest endpoint](./ninja_news_latest.png)
