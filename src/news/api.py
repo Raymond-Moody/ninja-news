@@ -1,4 +1,5 @@
 from ninja import NinjaAPI
+from .models import Video
 from django.shortcuts import render
 
 api = NinjaAPI()
@@ -12,4 +13,8 @@ def latest(request):
     """
     Render a Datatable (tablerio) of all the videos
     """
-    return 0
+    queryset = Video.objects.all()
+    context = {
+        "video_list" : queryset
+    }
+    return render(request, "news/latest.html", context)

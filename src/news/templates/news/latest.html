@@ -1,0 +1,26 @@
+{% extends "./base.html" %}
+
+{% block content %}
+{% if video_list %}
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Channel</th>
+            <th>Category</th>
+            <th>Publication Date</th>
+            <th>URL</th>
+        </tr>
+        {% for video in video_list %}
+            <tr>
+                <td>{{video.title}}</td>
+                <td>{{video.channel.name}}</td>
+                <td>{{video.category.name}}</td>
+                <td>{{video.publication_date}}</td>
+                <td>{{video.url}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>Failed to load latest videos</p>
+{% endif %}
+{% endblock %}
