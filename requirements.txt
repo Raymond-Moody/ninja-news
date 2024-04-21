@@ -19,3 +19,5 @@ protobuf
 nats-py
 pytube
 youtube-transcript-api
+langchain
+openai

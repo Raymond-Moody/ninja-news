@@ -15,6 +15,7 @@ import socket
 from distutils.util import strtobool
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,6 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = bool(strtobool(os.getenv("DEBUG", "false")))
+
+# Set API keys
+load_dotenv()
+YOUTUBE_API_KEY = os.environ["YT_API_KEY"]
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 # https://docs.djangoproject.com/en/5.0/ref/settings/#std:setting-ALLOWED_HOSTS
 allowed_hosts = os.getenv("ALLOWED_HOSTS", ".localhost,127.0.0.1,[::1]")
