@@ -4,9 +4,6 @@ import asyncio
 from protobuf import video_pb2
 from datetime import timezone
 
-import django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
 from django.conf import settings
 
 from news.models import Channel, Category, Video

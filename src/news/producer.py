@@ -12,8 +12,7 @@ from django.conf import settings
 
 
 async def push_videos():
-    load_dotenv()
-    api_key=os.getenv("YT_API_KEY")
+    api_key=settings.YOUTUBE_API_KEY
     yt_api = build("youtube", "v3", developerKey=api_key)
     request = yt_api.videoCategories().list(part="snippet", regionCode="US")
     response = request.execute()
