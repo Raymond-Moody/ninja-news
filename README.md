@@ -22,8 +22,9 @@
 
 # Running the Producer / Consumer Manually
 * The producer and consumer for videos are scheduled to run once an hour each. To run manually use:
-1. From the root directory, run `./run manage shell`
-2. Run `from news.tasks import producer` or `from news.tasks import consumer`
-3. Run `producer.run()` or `consumer.run()`
+1. In src/, create a .env file that sets YT_API_KEY to your key for the [YouTube Data API](https://developers.google.com/youtube/v3/getting-started)
+2. From the root directory, run `./run manage shell`
+3. Run `from news.tasks import producer` or `from news.tasks import consumer`
+4. Run `producer.run()` or `consumer.run()`
 
 ![Image of the /latest endpoint](./ninja_news_latest.png)
