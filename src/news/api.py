@@ -18,3 +18,12 @@ def latest(request):
         "video_list" : queryset
     }
     return render(request, "news/latest.html", context)
+
+@api.get("/summarize")
+def summarize(request):
+    return render(request, "news/home.html")
+
+@api.get("/chat")
+def chat(request):
+    return render(request, "news/home.html")
+
