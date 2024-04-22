@@ -17,7 +17,9 @@
         </thead>
         <tbody class="table-tbody">
         {% for video in video_list %}
-            <tr>
+            <!-- htmx toggles summary modal to show that video's summary -->
+            <tr id="tr-{{video.id}}" hx-get="/summary_html/{{video.id}}" hx-trigger="click" hx-target="#summary-modal-body" data-bs-toggle="modal" data-bs-target="#summary-modal">
+                <p style="display:none;" hx-get="/title/{{video.id}}" hx-trigger="click from:#tr-{{video.id}}" hx-target="#summary-modal-title"></p>
                 <td class="sort-title">{{video.title}}</td>
                 <td class="sort-channel">{{video.channel.name}}</td>
                 <td class="sort-category">{{video.category.name}}</td>
@@ -27,6 +29,19 @@
         {% endfor %}
         </tbody>
     </table>
+</div>
+
+<div class="modal" id="summary-modal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="summary-modal-title">Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="summary-modal-body">
+            </div>
+        </div>
+    </div>
 </div>
 
 
