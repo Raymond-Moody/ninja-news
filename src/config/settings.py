@@ -26,7 +26,7 @@ DEBUG = bool(strtobool(os.getenv("DEBUG", "false")))
 
 # Set API keys
 load_dotenv()
-YOUTUBE_API_KEY = os.environ["YT_API_KEY"]
+YOUTUBE_API_KEY = os.environ["YOUTUBE_API_KEY"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 # https://docs.djangoproject.com/en/5.0/ref/settings/#std:setting-ALLOWED_HOSTS

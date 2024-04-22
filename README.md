@@ -22,9 +22,17 @@
 
 # Running the Producer / Consumer Manually
 * The producer and consumer for videos are scheduled to run once an hour each. To run manually use:
-1. In src/, create a .env file that sets YT_API_KEY to your key for the [YouTube Data API](https://developers.google.com/youtube/v3/getting-started)
+1. In src/, create a .env file that sets YOUTUBE_API_KEY to your key for the [YouTube Data API](https://developers.google.com/youtube/v3/getting-started)
 2. From the root directory, run `./run manage shell`
 3. Run `from news.tasks import producer` or `from news.tasks import consumer`
 4. Run `producer.run()` or `consumer.run()`
 
 ![Image of the /latest endpoint](./ninja_news_latest.png)
+
+
+* Milestone 4
+* Submitted 4/28/2024
+
+# Running
+1. In src/.env, add a line setting OPENAI_API_KEY to your OpenAI API key
+2. `localhost:8000/summarize` will use OpenAI to generate summaries for all videos, and return them as a dictionary. This view is run by Celery every 15 minutes.

@@ -21,3 +21,5 @@ pytube
 youtube-transcript-api
 langchain
 openai
+langchain-openai
+langchain_postgres
