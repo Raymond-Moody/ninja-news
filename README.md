@@ -1,9 +1,8 @@
 # "News Time Machine" Project, Milestone 1
-### Submitted 3/24/2024
+* Submitted 3/24/2024
 
 # Milestone 2
-### Submitted 4/2/2024
-
+* Submitted 4/2/2024
 
 ## Running the code
 1. Build the containers with `docker-compose build`
@@ -18,7 +17,7 @@
 
 
 # Milestone 3
-### Submitted 4/14/2024
+* Submitted 4/14/2024
 
 ## Running the Producer / Consumer Manually
 * The producer and consumer for videos are scheduled to run once an hour each. To run manually use:
@@ -31,7 +30,7 @@
 
 
 # Milestone 4
-### Submitted 4/28/2024
+* Submitted 4/28/2024
 
 ## Running
 1. In src/.env, add a line setting OPENAI_API_KEY to your OpenAI API key
