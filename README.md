@@ -32,8 +32,11 @@
 # Milestone 4
 * Submitted 4/28/2024
 
-## Running
+## Generating Summaries
 1. In src/.env, add a line setting OPENAI_API_KEY to your OpenAI API key
 2. `localhost:8000/summarize` will use OpenAI to generate summaries for all videos, and return them as a dictionary. This is also run by Celery every 15 minutes.
 3. `localhost:8000/latest` has been updated so that clicking a row will pull up its transcript and summary
 ![Image of Transcript and Summary](./video_summary_modal.png)
+
+
+## Populating the Vector Database
