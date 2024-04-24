@@ -108,7 +108,18 @@ services:
     volumes:
       - ./nats_volume:/data
     command: "--name nats-main -js --sd /data -p 4222 --http_port 8222"
-  
+
+  # Bring up the container referenced in the Langchain documentation https://python.langchain.com/docs/integrations/vectorstores/pgvector/
+  pgvector:
+    image: pgvector/pgvector:pg16 
+    container_name: pgvector
+    environment:
+      POSTGRES_USER: "langchain"
+      POSTGRES_PASSWORD: "langchain"
+      POSTGRES_DB: "langchain"
+    ports:
+      - "6024:5432" 
+
 volumes:
 #  postgres: {}
   redis: {}
