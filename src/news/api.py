@@ -3,10 +3,7 @@ from .models import Video
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-import asyncio
+from news.tasks import generate_summaries
 
 api = NinjaAPI()
 
@@ -26,32 +23,10 @@ def latest(request):
     return render(request, "news/latest.html", context)
 
 @api.get("/summarize")
-async def summarize(request):
-    """
-    Checks for videos with blank summaries and creates a summary if necessary
-    Returns a dictionary of summaries in the format {video_id : summary}
-    """
-
-    # Create the langchain chain
-    prompt = ChatPromptTemplate.from_template("""Summarize the following transcript. In your response, refer to the transcript as 'this video'.
-    Transcript:
-    {input}
-    """)
-    llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-3.5-turbo-0125")
-    output_parser = StrOutputParser()
-
-    chain = prompt | llm | output_parser
-
-    summaries = {}
-    async for video in Video.objects.all():
-        if not video.summary: # Check for blank summary end generate one if necessary
-            with open(video.transcript,"r") as f:
-                transcript = f.read()
-            response = await chain.ainvoke({"input" : transcript})
-            video.summary = response
-            await video.asave()
-        summaries[video.id] = video.summary
-    return summaries
+def summarize(request):
+    summaries = generate_summaries.delay()
+    return summaries.get()
+    
 
 @api.get("/summary_html/{video_id}")
 def summary_html(request, video_id: str):
