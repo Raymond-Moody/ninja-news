@@ -11,3 +11,5 @@ public_collected/
 !.env.example
 celerybeat-schedule
 docker-compose.override.yml
+
+postgres/

@@ -143,7 +143,7 @@ CACHES = {
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 
-CELERY_BEAT_SCHEDULE = {
+#CELERY_BEAT_SCHEDULE = {
 #    "producer-schedule" : {
 #        "task" : "news.tasks.producer",
 #        "schedule" : timedelta(minutes=30),
@@ -158,14 +158,14 @@ CELERY_BEAT_SCHEDULE = {
 #            "expires" : 60.0
 #        }
 #    }
-    "summaries-schedule" : {
-        "task" : "news.tasks.generate_summaries",
-        "schedule" : timedelta(minutes=15),
-        "options" : {
-            "expires" : 60.0
-        }
-    }
-}
+#    "summaries-schedule" : {
+#        "task" : "news.tasks.generate_summaries",
+#        "schedule" : timedelta(minutes=15),
+#        "options" : {
+#            "expires" : 60.0
+#        }
+#    }
+#}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/

@@ -23,3 +23,4 @@ langchain
 openai
 langchain-openai
 langchain_postgres
+langchainhub

@@ -1,9 +1,14 @@
-from ninja import NinjaAPI, Schema
+from ninja import NinjaAPI, Schema, Form
 from .models import Video
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse
 from news.tasks import generate_summaries
+from langchain_postgres.vectorstores import PGVector
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain import hub
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 
 api = NinjaAPI()
 
@@ -84,10 +89,45 @@ def title(request, video_id: str):
     except ObjectDoesNotExist:
         return HttpResponse(f"Video with id {video_id} does not exist")
 
-class ChatSchema(Schema):
-    message: str = ""
+class ChatIn(Schema):
+    message: str
+    #history: str
 
-@api.post("/chat")
-def chat(request, data: ChatSchema):
-    return data.message
+def generate_chat(message="", history=""):
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
 
+    # Access vector store and create a retriever
+    store = PGVector(
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=settings.OPENAI_API_KEY),
+        connection = "postgresql+psycopg://langchain:langchain@pgvector:5432/langchain",
+        collection_name = "news",
+        use_jsonb = True
+    )
+    retriever = store.as_retriever(search_type="similarity", search_kwargs={"k":6})
+
+    # Pull RAG prompt from langchain hub and create the RAG chain
+    llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-3.5-turbo-0125")
+    prompt = hub.pull("rlm/rag-prompt")
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+    results = ""
+    for chunk in rag_chain.stream(message):
+        results = results + chunk
+    return results
+
+@api.post("/chat_backend")
+def render_chat_response(request, data: Form[ChatIn]):
+    results = generate_chat(data.message)
+    response = HttpResponse()
+    response.write(f"<p class='user chat_dialog'>{data.message}</p>")
+    response.write(f"<p class='ai chat_dialog'>{results}</p>")
+    return response
+
+@api.get("/chat")
+def chat_frontend(request):
+    return render(request, "news/chat.html")

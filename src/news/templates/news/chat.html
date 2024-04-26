@@ -1,0 +1,11 @@
+{% extends "./base.html" %}
+
+{% load ninja_news %}
+
+{% block content %}
+<form id="chat_form" hx-post="/chat_backend" hx-target="#chat_response" hx-swap="beforeend">
+    <input type="text" id="chat_input" name="message"/>
+    <input type="submit" id="chat_submit" value="Send Chat"/>
+</form>
+<div id="chat_response"></div>
+{% endblock %}
