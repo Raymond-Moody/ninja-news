@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from news.tasks import generate_summaries
 from langchain_postgres.vectorstores import PGVector
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain import hub
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
@@ -106,9 +106,18 @@ def generate_chat(message="", history=""):
     )
     retriever = store.as_retriever(search_type="similarity", search_kwargs={"k":6})
 
-    # Pull RAG prompt from langchain hub and create the RAG chain
+    # Create RAG chain
     llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-3.5-turbo-0125")
-    prompt = hub.pull("rlm/rag-prompt")
+    prompt = PromptTemplate.from_template("""
+    You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Give complete answers, but keep them concise. Try to include specific data from the context.
+
+    Question: {question} 
+
+    Context: {context} 
+
+    Answer:
+    """)
+
     rag_chain = (
         {"context": retriever | format_docs, "question": RunnablePassthrough()}
         | prompt
@@ -122,12 +131,50 @@ def generate_chat(message="", history=""):
 
 @api.post("/chat_backend")
 def render_chat_response(request, data: Form[ChatIn]):
-    results = generate_chat(data.message)
+    history = request.session.get("chat_history")
+    if history is None:
+        request.session["chat_history"] = ""
+        history = ""
+    request.session["chat_history"] = history + data.message
+    #results = generate_chat(data.message)
     response = HttpResponse()
-    response.write(f"<p class='user chat_dialog'>{data.message}</p>")
-    response.write(f"<p class='ai chat_dialog'>{results}</p>")
+    response.write(f"""
+    <div class="row align-items-end justify-content-end">
+        <div class="col col-lg-6">
+            <div class="chat-bubble chat-bubble-me">
+                <div class="chat-bubble-title">
+                    <div class="row">
+                        <div class="col chat-bubble-author">User</div>
+                    </div>
+                </div>
+                <div class="chat-bubble-body"><p>{data.message}</p></div>
+            </div>
+        </div>
+    </div>
+    """)
+
+    response.write(f"""
+    <div class="row align-items-end">
+        <div class="col col-lg-6">
+            <div class="chat-bubble">
+                <div class="chat-bubble-title">
+                    <div class="row">
+                        <div class="col chat-bubble-author">Assistant</div>
+                    </div>
+                </div>
+                <div class="chat-bubble-body"><p>'''{history}'''</p></div>
+            </div>
+        </div>
+    </div>
+    """)
     return response
 
 @api.get("/chat")
 def chat_frontend(request):
     return render(request, "news/chat.html")
+
+
+
+
+
+

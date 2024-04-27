@@ -3,9 +3,33 @@
 {% load ninja_news %}
 
 {% block content %}
-<form id="chat_form" hx-post="/chat_backend" hx-target="#chat_response" hx-swap="beforeend">
-    <input type="text" id="chat_input" name="message"/>
-    <input type="submit" id="chat_submit" value="Send Chat"/>
-</form>
-<div id="chat_response"></div>
+<div class="container-xl">
+  <div class="card">
+    <div class="row g-0">
+      <div class="col-12 col-lg-7 col-xl-9 d-flex flex-column">
+        <div class="card-body scrollable" style="height: 35rem">
+          <div class="chat">
+            <div class="chat_bubbles" id="chat_response">
+              <!-- Will be filled by HTMX -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <form id="chat_form" hx-post="/chat_backend" hx-target="#chat_response" hx-swap="beforeend">
+          <div class="input-group input-group-flat">
+            <input type="text" class="form-control" autocomplete="off" placeholder="Enter your question:" name="message"/>
+            <span class="input-group-text">
+              <input type="submit" class="btn btn-success" value="Send"/>
+            </span>
+          </div>
+        </form>
+      </div>
+      </div>
+  </div>
+</div>
 {% endblock %}
+
+
+
+
