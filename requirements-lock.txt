@@ -44,7 +44,6 @@ langchain-core==0.1.46
 langchain-openai==0.1.4
 langchain-postgres==0.0.3
 langchain-text-splitters==0.0.1
-langchainhub==0.1.15
 langgraph==0.0.32
 langsmith==0.1.51
 marshmallow==3.21.1
