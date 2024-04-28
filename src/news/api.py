@@ -1,4 +1,4 @@
-import asyncio
+from time import sleep
 from ninja import NinjaAPI, Schema, Form
 from .models import Video
 from django.shortcuts import render
@@ -157,76 +157,27 @@ def generate_chat(message="", history=[]):
     full_ai_msg = ""
     for chunk in ai_msg:
         if "answer" in chunk:
-            yield chunk["answer"]
+            yield f'data: {chunk["answer"]}\n\n'
             full_ai_msg = full_ai_msg + chunk["answer"]
     history.append(full_ai_msg)
 
-def generator_test():
-    while True:
-        print("test", end=" ")
-        yield f"<p>testing</p>"
-
-def render_chat(message, history):
-    """
-    Convert the streamed message from the AI into formatted html
-    """
-
-    yield f"""
-    <div class="row align-items-end justify-content-end">
-        <div class="col col-lg-6">
-            <div class="chat-bubble chat-bubble-me">
-                <div class="chat-bubble-title">
-                    <div class="row">
-                        <div class="col chat-bubble-author">User</div>
-                    </div>
-                </div>
-                <div class="chat-bubble-body"><p>{message}</p></div>
-            </div>
-        </div>
-    </div>
-    """
-
-    yield """
-    <div class="row align-items-end">
-        <div class="col col-lg-6">
-            <div class="chat-bubble">
-                <div class="chat-bubble-title">
-                    <div class="row">
-                        <div class="col chat-bubble-author">Assistant</div>
-                    </div>
-                </div>
-                <div class="chat-bubble-body">
-                    <p>
-    """
-
-    yield from generate_chat(message, history)
-    #yield from generator_test()
-
-    yield """
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-
-
-
-@api.post("/chat_backend")
-async def chat_response_html(request, data: Form[ChatIn]):
+@api.get("/chat_backend")
+def chat_response_html(request, message: str):
     """
     Return an http stream of the AI response to the given message
     """
+    print(message)
     history = request.session.get("chat_history")
     if not history:
         history = []
-    history.append(data.message)
-    result_stream = render_chat(data.message, history)
+    history.append(message)
+    #result_stream = render_chat(message, history)
+    result_stream = generate_chat(message, history)
     request.session["chat_history"] = history
-    response = StreamingHttpResponse(result_stream, content_type="text/html")
-    #response = StreamingHttpResponse(numbers_generate(), content_type="text/html")
-    #response = HttpResponse()
-    #response.write("<p>testing</p>")
+    response = StreamingHttpResponse(result_stream, content_type="text/event-stream")
+    #response = StreamingHttpResponse(generator_test(), content_type="text/event-stream")
+    response['X-Accel-Buffering'] = 'no'
+    response['Cache-Control'] = 'no-cache'
     return response
 
 @api.get("/chat")
