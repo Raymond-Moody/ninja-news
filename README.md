@@ -40,3 +40,4 @@
 
 
 ## Populating the Vector Database
+1. Visit `localhost:8000/pgvector` to populate the vector database

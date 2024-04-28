@@ -57,7 +57,7 @@ def populate_pgvector():
     Populate the vector database with the transcripts
     This task should only be run once
     """
-
+    print("Beginning population")
     # Create document loader for transcript directory
     transcript_path = os.path.join(settings.BASE_DIR, "transcripts/")
     loader = DirectoryLoader(transcript_path, loader_cls=TextLoader)
@@ -74,3 +74,4 @@ def populate_pgvector():
         use_jsonb=True,
         pre_delete_collection = True, # Delete collection if this task was run before, for testing
     )
+    print("Successfully created vectorstore")

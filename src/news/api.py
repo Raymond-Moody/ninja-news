@@ -4,7 +4,7 @@ from .models import Video
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse, StreamingHttpResponse
-from news.tasks import generate_summaries
+from news.tasks import generate_summaries, populate_pgvector
 from langchain_postgres.vectorstores import PGVector
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate, MessagesPlaceholder, ChatPromptTemplate
@@ -171,11 +171,9 @@ def chat_response_html(request, message: str):
     if not history:
         history = []
     history.append(message)
-    #result_stream = render_chat(message, history)
     result_stream = generate_chat(message, history)
     request.session["chat_history"] = history
     response = StreamingHttpResponse(result_stream, content_type="text/event-stream")
-    #response = StreamingHttpResponse(generator_test(), content_type="text/event-stream")
     response['X-Accel-Buffering'] = 'no'
     response['Cache-Control'] = 'no-cache'
     return response
@@ -184,3 +182,8 @@ def chat_response_html(request, message: str):
 def chat_frontend(request):
     request.session["chat_history"] = ""
     return render(request, "news/chat.html")
+
+@api.get("/pgvector")
+def run_pgvector_task(request):
+    populate_pgvector.apply_async()
+    return render(request, "news/pgvector.html")
