@@ -41,3 +41,16 @@
 
 ## Populating the Vector Database
 1. Visit `localhost:8000/pgvector` to populate the vector database
+
+
+## Chatting
+1. `localhost:8000/chat` will bring up the chat interface
+2. Click the "Send" button to submit a chat. The ai is capable of accessing video transcripts as well as chat history.
+
+# Milestone 5
+* Submitted 4/28/2024
+![AI response to "What are the most recent news about the war in Ukraine?"](ai_q1.png)
+![AI response to "What are the chances for the US Fed to reduce interest rates in 2024?"](ai_q2.png)
+![AI response to "Did the stock market fall after the latest jobs report?"](ai_q3.png)
+![AI response to "Why are prices of electric vehicles falling?"](ai_q4.png)
+![AI response to "What are the latest developments in the fight against cancer?"](ai_q5.png)
