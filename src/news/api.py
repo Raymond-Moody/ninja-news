@@ -1,14 +1,18 @@
+import asyncio
 from ninja import NinjaAPI, Schema, Form
 from .models import Video
 from django.shortcuts import render
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from news.tasks import generate_summaries
 from langchain_postgres.vectorstores import PGVector
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, MessagesPlaceholder, ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain.chains import create_retrieval_chain, create_history_aware_retriever
+from langchain_core.messages import HumanMessage
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
 api = NinjaAPI()
 
@@ -91,9 +95,11 @@ def title(request, video_id: str):
 
 class ChatIn(Schema):
     message: str
-    #history: str
 
-def generate_chat(message="", history=""):
+def generate_chat(message="", history=[]):
+    """
+    Request a response from OpenAI and stream it back
+    """
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
@@ -106,39 +112,66 @@ def generate_chat(message="", history=""):
     )
     retriever = store.as_retriever(search_type="similarity", search_kwargs={"k":6})
 
-    # Create RAG chain
+    # Initialize AI Components
     llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-3.5-turbo-0125")
-    prompt = PromptTemplate.from_template("""
-    You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Give complete answers, but keep them concise. Try to include specific data from the context.
 
-    Question: {question} 
+    prompt = """You are an assistant for question-answering tasks.\
+    Use the following pieces of retrieved context to answer the question.\
+    If you don't know the answer, just say that you don't know. \
+    Give complete answers, but keep them concise. Try to include specific data from the context.
+    
+    {context} 
+    """
 
-    Context: {context} 
+    # Create chain for handling chat history
+    contextualize_q_system_prompt = """Given a chat history and the latest user question \
+    which might reference context in the chat history, formulate a standalone question \
+    which can be understood without the chat history. Do NOT answer the question, \
+    just reformulate it if needed and otherwise return it as is."""
 
-    Answer:
-    """)
+    contextualize_q_prompt = ChatPromptTemplate.from_messages([
+        ("system", contextualize_q_system_prompt),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ])
 
-    rag_chain = (
-        {"context": retriever | format_docs, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
+    history_aware_retriever = create_history_aware_retriever(
+        llm, retriever, contextualize_q_prompt
     )
-    results = ""
-    for chunk in rag_chain.stream(message):
-        results = results + chunk
-    return results
+    
+    qa_prompt = ChatPromptTemplate.from_messages([
+        ("system", prompt),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}")
+    ])
 
-@api.post("/chat_backend")
-def render_chat_response(request, data: Form[ChatIn]):
-    history = request.session.get("chat_history")
-    if history is None:
-        request.session["chat_history"] = ""
-        history = ""
-    request.session["chat_history"] = history + data.message
-    #results = generate_chat(data.message)
-    response = HttpResponse()
-    response.write(f"""
+    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+
+    ai_msg = rag_chain.stream({
+        "input" : message,
+        "chat_history" : history
+    })
+
+    full_ai_msg = ""
+    for chunk in ai_msg:
+        if "answer" in chunk:
+            yield chunk["answer"]
+            full_ai_msg = full_ai_msg + chunk["answer"]
+    history.append(full_ai_msg)
+
+def generator_test():
+    while True:
+        print("test", end=" ")
+        yield f"<p>testing</p>"
+
+def render_chat(message, history):
+    """
+    Convert the streamed message from the AI into formatted html
+    """
+
+    yield f"""
     <div class="row align-items-end justify-content-end">
         <div class="col col-lg-6">
             <div class="chat-bubble chat-bubble-me">
@@ -147,13 +180,13 @@ def render_chat_response(request, data: Form[ChatIn]):
                         <div class="col chat-bubble-author">User</div>
                     </div>
                 </div>
-                <div class="chat-bubble-body"><p>{data.message}</p></div>
+                <div class="chat-bubble-body"><p>{message}</p></div>
             </div>
         </div>
     </div>
-    """)
+    """
 
-    response.write(f"""
+    yield """
     <div class="row align-items-end">
         <div class="col col-lg-6">
             <div class="chat-bubble">
@@ -162,19 +195,41 @@ def render_chat_response(request, data: Form[ChatIn]):
                         <div class="col chat-bubble-author">Assistant</div>
                     </div>
                 </div>
-                <div class="chat-bubble-body"><p>'''{history}'''</p></div>
+                <div class="chat-bubble-body">
+                    <p>
+    """
+
+    yield from generate_chat(message, history)
+    #yield from generator_test()
+
+    yield """
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-    """)
+    """
+
+
+
+@api.post("/chat_backend")
+async def chat_response_html(request, data: Form[ChatIn]):
+    """
+    Return an http stream of the AI response to the given message
+    """
+    history = request.session.get("chat_history")
+    if not history:
+        history = []
+    history.append(data.message)
+    result_stream = render_chat(data.message, history)
+    request.session["chat_history"] = history
+    response = StreamingHttpResponse(result_stream, content_type="text/html")
+    #response = StreamingHttpResponse(numbers_generate(), content_type="text/html")
+    #response = HttpResponse()
+    #response.write("<p>testing</p>")
     return response
 
 @api.get("/chat")
 def chat_frontend(request):
+    request.session["chat_history"] = ""
     return render(request, "news/chat.html")
-
-
-
-
-
-
