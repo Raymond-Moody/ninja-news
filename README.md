@@ -19,9 +19,9 @@
 # Milestone 3
 * Submitted 4/14/2024
 
-## Running the Producer / Consumer Manually
-* The producer and consumer for videos are scheduled to run once an hour each. To run manually use:
+## Running the Producer / Consumer
 1. In src/, create a .env file that sets YOUTUBE_API_KEY to your key for the [YouTube Data API](https://developers.google.com/youtube/v3/getting-started)
+* The producer and consumer for videos are scheduled to run once every half hour. To run manually use:
 2. From the root directory, run `./run manage shell`
 3. Run `from news.tasks import producer` or `from news.tasks import consumer`
 4. Run `producer.run()` or `consumer.run()`
@@ -38,14 +38,14 @@
 3. `localhost:8000/latest` has been updated so that clicking a row will pull up its transcript and summary
 ![Image of Transcript and Summary](./video_summary_modal.png)
 
-
 ## Populating the Vector Database
 1. Visit `localhost:8000/pgvector` to populate the vector database
 
-
 ## Chatting
 1. `localhost:8000/chat` will bring up the chat interface
-2. Click the "Send" button to submit a chat. The ai is capable of accessing video transcripts as well as chat history.
+2. Click the "Send" button to submit a chat. The AI is capable of accessing video transcripts as well as chat history.
+3. "Click to toggle references" will show / hide the context the AI retrieved when clicked.
+
 
 # Milestone 5
 * Submitted 4/28/2024

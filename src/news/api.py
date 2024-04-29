@@ -1,4 +1,4 @@
-from time import sleep
+import json
 from ninja import NinjaAPI, Schema, Form
 from .models import Video
 from django.shortcuts import render
@@ -23,7 +23,7 @@ def home(request):
 @api.get("/latest")
 def latest(request):
     """
-    Render a Datatable (tablerio) of all the videos
+    Render a Datatable (tabler.io) of all the videos
     """
     queryset = Video.objects.all()
     context = {
@@ -118,7 +118,8 @@ def generate_chat(message="", history=[]):
     prompt = """You are an assistant for question-answering tasks.\
     Use the following pieces of retrieved context to answer the question.\
     If you don't know the answer, just say that you don't know. \
-    Give complete answers, but keep them concise. Try to include specific data from the context.
+    Give complete answers, but keep them concise. Try to include specific data from the context.\
+    Also, print the entire context back out Verbatim.\
     
     {context} 
     """
@@ -156,13 +157,26 @@ def generate_chat(message="", history=[]):
 
     full_ai_msg = ""
     for chunk in ai_msg:
+        if "context" in chunk:
+            for doc in chunk["context"]:
+                source = doc.metadata["source"].split("/")[-1] # Get video id from source file
+                source_vid = Video.objects.get(pk=source)
+                data = {
+                    "quote": doc.page_content,
+                    "video": source_vid.title,
+                    "channel" : source_vid.channel.name
+                }
+                data = json.dumps(data)
+                yield f'data: {data}\n\n'
         if "answer" in chunk:
-            yield f'data: {chunk["answer"]}\n\n'
+            data = {"answer" : chunk["answer"]}
+            data = json.dumps(data)
+            yield f'data: {data}\n\n'
             full_ai_msg = full_ai_msg + chunk["answer"]
     history.append(full_ai_msg)
 
 @api.get("/chat_backend")
-def chat_response_html(request, message: str):
+def chat_response(request, message: str):
     """
     Return an http stream of the AI response to the given message
     """

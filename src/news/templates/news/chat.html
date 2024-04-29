@@ -44,6 +44,8 @@
 
     const bubble = document.createElement("div");
     bubble.classList.add("chat-bubble");
+    if(role === "user")
+      bubble.classList.add("chat-bubble-me");
     col_div.appendChild(bubble);
 
     const bubble_title = document.createElement("div");
@@ -66,7 +68,14 @@
     bubble_body.classList.add("chat-bubble-body");
     bubble.appendChild(bubble_body);
 
-    const bubble_body_content = document.createElement("p");
+    const bubble_body_content = document.createElement("div");
+    if(role === "sources"){
+        bubble_body_content.classList.add("collapsible");
+        const source_title = document.createElement("p");
+        source_title.innerHTML = "Click to toggle references";
+        source_title.addEventListener("click", () => bubble_body_content.classList.toggle("shown"));
+        bubble_body.appendChild(source_title);
+    }
     bubble_body.appendChild(bubble_body_content);
 
     return bubble_body_content;
@@ -93,6 +102,7 @@
       window.source = new EventSource(`/chat_backend?message=${user_input}`);
 
       const bot_bubble = createChatBubble("ai");
+      const source_bubble = createChatBubble("sources");
 
       window.source.onopen = function (){
           console.log("Opened event source");
@@ -100,7 +110,21 @@
 
       window.source.onmessage = function (e) {
         console.log(e);
-        bot_bubble.innerHTML += e.data; 
+        data = JSON.parse(e.data)
+        if('quote' in data){
+          citation_header = document.createElement("h5");
+          citation_body = document.createElement("p");
+          citation_body.innerHTML += "'";
+          citation_body.innerHTML += data.quote;
+          citation_body.innerHTML += "'";
+          citation_header.innerHTML += data.video;
+          citation_header.innerHTML += "' by ";
+          citation_header.innerHTML += data.channel;
+          source_bubble.appendChild(citation_header);
+          source_bubble.appendChild(citation_body);
+        } else {
+          bot_bubble.innerHTML += data.answer;
+        }
       };
 
       window.source.onerror = function (event) {
