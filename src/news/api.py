@@ -160,7 +160,10 @@ def generate_chat(message="", history=[]):
         if "context" in chunk:
             for doc in chunk["context"]:
                 source = doc.metadata["source"].split("/")[-1] # Get video id from source file
-                source_vid = Video.objects.get(pk=source)
+                try:
+                    source_vid = Video.objects.get(pk=source)
+                except Video.DoesNotExist:
+                    print("Referenced deleted video:", source)
                 data = {
                     "quote": doc.page_content,
                     "video": source_vid.title,
@@ -180,7 +183,6 @@ def chat_response(request, message: str):
     """
     Return an http stream of the AI response to the given message
     """
-    print(message)
     history = request.session.get("chat_history")
     if not history:
         history = []
