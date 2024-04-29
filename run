@@ -5,7 +5,7 @@ set -o pipefail
 
 DC="${DC:-exec}"
 
-# If we're running in CI we need to disable TTY allocation for docker compose
+# If we're running in CI we need to disable TTY allocation for docker-compose
 # commands that enable it by default, such as exec and run.
 TTY=""
 if [[ ! -t 1 ]]; then
@@ -17,13 +17,13 @@ fi
 # -----------------------------------------------------------------------------
 
 function _dc {
-  docker compose "${DC}" ${TTY} "${@}"
+  docker-compose "${DC}" ${TTY} "${@}"
 }
 
 function _build_run_down {
-  docker compose build
-  docker compose run ${TTY} "${@}"
-  docker compose down
+  docker-compose build
+  docker-compose run ${TTY} "${@}"
+  docker-compose down
 }
 
 # -----------------------------------------------------------------------------
@@ -163,16 +163,16 @@ function ci:test {
 
   cp --no-clobber .env.example .env
 
-  docker compose build
-  docker compose up -d
+  docker-compose build
+  docker-compose up -d
 
   # shellcheck disable=SC1091
   . .env
-  wait-until "docker compose exec -T \
+  wait-until "docker-compose exec -T \
     -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
     psql -U ${POSTGRES_USER} ${POSTGRES_USER} -c 'SELECT 1'"
 
-  docker compose logs
+  docker-compose logs
 
   lint "${@}"
   format:imports --check

@@ -1,3 +1,8 @@
+# Notes for running
+1. Ensure that src/.env is created and properly sets `YOUTUBE_API_KEY` and `OPENAI_API_KEY` before bringing up the containers
+2. Make sure to run the producer and consumer first thing after migrations are made and migrated
+3. I recommend running the producer / consumer manually and visiting `localhost:8000/summarize` and `localhost:8000/pgvector` to avoid waiting on Celery tasks
+
 # "News Time Machine" Project, Milestone 1
 * Submitted 3/24/2024
 
